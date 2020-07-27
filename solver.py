@@ -69,7 +69,7 @@ def solve_it(input_data):
 
 
 
-    def difference(solution, a, b):
+    def difference_swap(solution, a, b):
         # convert solution into a hamiltonian cycle
         sol = solution + [0]
         if b - a == 1:
@@ -106,23 +106,55 @@ def solve_it(input_data):
 
 
     def tabu_search(iterations):
-        tabu_tenure =  np.zeros((nodeCount,nodeCount))
+        tabu_tenure =  np.array([[0 for i in range(nodeCount)] for j in range(nodeCount)])
         sol = create_initial_feasible_solution(nodeCount, 'nearest_neighbourhood')
         print(path_length(sol))
         for iter in range(iterations):
+            insert = False
             a, b = sorted(random.sample(range(1, nodeCount), 2))
+            swap_difference = difference_swap(sol, a, b)
+            insert_difference = difference_insert(sol, a, b)
             if not tabu_tenure[a, b]:
-                if difference(sol, a, b) >= 0:
-                    print("difference is {}".format(difference(sol, a, b)))
+                if swap_difference >= 0 and swap_difference >= insert_difference:
+                    print("sdifference is {}".format(swap_difference))
+                    # previous_solution = path_length(sol)
                     sol = move_swap(sol, a, b)
-                    tabu_tenure[a, b] += 3.0
-                elif difference(sol, a, b) >= -1*(path_length(sol)/nodeCount) and random.random() <= 0.05:
-                    print("bad difference is {}".format(difference(sol, a, b)))
+                    # print(previous_solution-path_length(sol))
+                    tabu_tenure[a, b] = 7
+                elif insert_difference > 0:
+                    print("idifference is {}".format(insert_difference))
+                    # previous_solution = path_length(sol)
+                    sol = move_insert(sol, a, b)
+                    # print(previous_solution-path_length(sol))
+                    tabu_tenure[a, b] = 3
+                # elif swap_difference >= -1*(path_length(sol)/nodeCount) and random.random() <= 0.001:
+                #     print("bad difference is {}".format(insert_difference))
+                #     sol = move_swap(sol, a, b)
+                #     tabu_tenure[a, b] += 3.0
+                # elif insert_difference >= -1*(path_length(sol)/nodeCount) and random.random() <= 0.001:
+                #     print("bad difference is {}".format(insert_difference))
+                #     sol = move_insert(sol, a, b)
+                #     tabu_tenure[a, b] += 3.0
+                else:
+                    tabu_tenure[a, b] += 2
+                # print(tabu_tenure[a, b])
+            else:
+                if swap_difference >= 0 and swap_difference >= insert_difference:
+                    print("sdifference is {}".format(swap_difference))
+                    # previous_solution = path_length(sol)
                     sol = move_swap(sol, a, b)
-                    tabu_tenure[a, b] += 3.0
+                    # print(previous_solution-path_length(sol))
+                    tabu_tenure[a, b] = 3.0
+                elif insert_difference > 0:
+                    print("idifference is {}".format(insert_difference))
+                    # previous_solution = path_length(sol)
+                    sol = move_insert(sol, a, b)
+                    # print(previous_solution-path_length(sol))
+                    tabu_tenure[a, b] = 2.0
                 else:
                     tabu_tenure[a,b] -= 1
         print(path_length(sol))
+        print(tabu_tenure)
         return sol, tabu_tenure
 
 
@@ -137,21 +169,47 @@ def solve_it(input_data):
 
     def move_insert(list, index1, index2):
         # element from index 2 is put at index 1
-        list.insert(index1, list.pop(index2))
-        return list
+        list_new = list.copy()
+        list_new.insert(index1, list_new.pop(index2))
+        return list_new
 
 
     the_list= [0, 1, 2, 3, 4,5, 6, 7 ,8]
 
-    move_insert(the_list, 1, 5)
+
+
+    a, b = 5, 1
+    move_insert(the_list, a, b)
+
+    # before insert
+
+#     the_list[b-1], the_list[b]
+#     the_list[b], the_list[b+1]
+# ->  the_list[b-1], the_list[b+1]
+#
+#     the_list[a-1], the_list[a]
+# -> the_list[a-1], the_list[b]
+#     the_list[b], the_list[a]
+
+    def difference_insert(sol, a, b):
+        sol = sol + [0]
+        return ((length(points[sol[b-1]], points[sol[b]]) +
+                    length(points[sol[b]], points[sol[b+1]]) +
+                    length(points[sol[a-1]], points[sol[a]])) -
+                (length(points[sol[b-1]], points[sol[b+1]]) +
+                    length(points[sol[a-1]], points[sol[b]]) +
+                    length(points[sol[b]], points[sol[a]])))
+
+
 
 
 
     solution, tt = tabu_search(1000)
 
-
+import sys
+np.set_printoptions(threshold=sys.maxsize)
+tt[0,0] +=1
     path_length(solution)
-
 
 
 
